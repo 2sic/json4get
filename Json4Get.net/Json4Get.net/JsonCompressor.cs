@@ -30,17 +30,6 @@ namespace ToSic.Json4Get
         public static string Compress(string json)
             => Compressors.Aggregate(json, (current, t) => t.Item1.Replace(current, t.Item2));
 
-        /// <summary>
-        /// Restore a compact character to the uncompressed value, or return a null if not found
-        /// </summary>
-        /// <param name="code"></param>
-        /// <returns></returns>
-        public static string RestoreOrNull(char code)
-        {
-            var index = StructureAbbreviations.IndexOf(code);
-            return index == -1 ? null : StructureToAbbreviate[index];
-        }
-
         public static string Decompress(string json)
             => DeCompressors.Aggregate(json, (current, t) => t.Item1.Replace(current, t.Item2));
 

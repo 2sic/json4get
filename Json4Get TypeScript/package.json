@@ -1,0 +1,41 @@
+{
+  "name": "@2sic.com/json4get",
+  "version": "0.1.0",
+  "description": "JSON for HTTP GET adapter",
+  "main": "index.js",
+  "scripts": {
+    "xtest": "jasmine",
+    "test": "jasmine-ts --config=spec/support/jasmine.json",
+    "testWithCoverage": "nyc -r lcov -e .ts -x \"*.test.ts\" jasmine-ts --config=jasmine.json && nyc report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2sic/json4get.git"
+  },
+  "keywords": [
+    "json",
+    "http",
+    "get",
+    "rest",
+    "spa",
+    "parameter",
+    "url",
+    "url-fragment"
+  ],
+  "author": "2sic internet solutions GmbH / Daniel Mettler (iJungleboy)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/2sic/json4get/issues"
+  },
+  "homepage": "https://github.com/2sic/json4get#readme",
+  "devDependencies": {
+    "@types/jasmine": "^3.3.7",
+    "@types/node": "^10.12.18",
+    "jasmine": "^3.3.1",
+    "jasmine-ts": "^0.3.0",
+    "jasmine-ts-console-reporter": "^3.1.1",
+    "nyc": "^13.1.0",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.4"
+  }
+}

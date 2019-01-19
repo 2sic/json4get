@@ -2,3 +2,5 @@ Json4Get.net/packages/
 **/bin/
 **/.vs/
 **/obj/
+**/node_modules/
+Json4Get TypeScript/dist/
