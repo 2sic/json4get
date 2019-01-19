@@ -12,13 +12,15 @@ Passing JSON in a GET request is ugly - really, really ugly. Even simple objects
 /api?p=%7B%22filters%22%3A%20%7B%22completed%22%3A%20true%2C%20%22tags%22%3A%20%5B%22issues%22%2C%20%22best%20practices%22%5D%7D%20%7D
 
 // this shorter, more readable version would be much nicer
-/api?p=('filters':('completed':true,'tags':!"issues","best_practices"!))
+/api?p=('filters'!('completed'!t*'tags'!L'issues'*'best_practices'J))
 
 // or when using these params for SPA use cases
-/view#p=('filters':('completed':true,'tags':!"issues","best_practices"!))
+/view#p=('filters'!('completed'!t*'tags'!L'issues'*'best_practices'J))
 ```
 
 So the ugly result is 20% - 200% larger, unreadable and not editable by a human, because using JSON in a url ([specs](https://www.ietf.org/rfc/rfc1738.txt)) and URI ([specs](https://www.ietf.org/rfc/rfc3986.txt)) was never a design goal. For example, the most used characters in a JSON are `{`, `}`, `"`, `[`, `]` and space - all of which are mapped to 3 characters like `%7B`, `%7D` etc. And if the JSON contains valid white-space between objects, it becomes even uglier.
+
+The only characters allowed in a URL-fragment are `a-z`, `A-Z`, `0-9`, and `-_.!*'()`.
 
 ## How we're fixing it
 
@@ -26,10 +28,15 @@ We define a standard for substituting common JSON characters with safe URL chara
 
 ### Substitutions in the Structure, _Outside_ of Values
 
+Since json puts everything in `"` quotes except for `{},.:-123456789` and `null,true,false` we are left to work with `()!*_'` and any a-Z character to represent the structure. Let's do this:
+
 * all whitespace is removed as it has no relevance outside of values
-* `{` and `}` become `(` and `)`
-* `"` becomes `'`
-* `[` and `]` both become `!`
+* `{` and `}` become `(` and `)` for easy readibility (looks similar)
+* `"` becomes `'` for easy readibility (looks similar)
+* `:` becomes `!` for easy readibily (looks similar)
+* `,` becomes `*` as it's a clear separation character
+* `[` and `]` become `L` and `J` as it looks a bit similar
+
 
 This is simple and straight-forward, and all the substituted characters can never occur in a JSON outside of a value node. 
 
