@@ -12,7 +12,10 @@ Passing JSON in a GET request is ugly - really, really ugly. Even simple objects
 /api?p=%7B%22filters%22%3A%20%7B%22completed%22%3A%20true%2C%20%22tags%22%3A%20%5B%22issues%22%2C%20%22best%20practices%22%5D%7D%20%7D
 
 // this shorter, more readable version would be much nicer
-/your-path-here?params=('filters':('completed':true,'tags':!"issues","best_practices"!))
+/api?p=('filters':('completed':true,'tags':!"issues","best_practices"!))
+
+// or when using these params for SPA use cases
+/view#p=('filters':('completed':true,'tags':!"issues","best_practices"!))
 ```
 
 So the ugly result is 20% - 200% larger, unreadable and not editable by a human, because using JSON in a url ([specs](https://www.ietf.org/rfc/rfc1738.txt)) and URI ([specs](https://www.ietf.org/rfc/rfc3986.txt)) was never a design goal. For example, the most used characters in a JSON are `{`, `}`, `"`, `[`, `]` and space - all of which are mapped to 3 characters like `%7B`, `%7D` etc. And if the JSON contains valid white-space between objects, it becomes even uglier.
