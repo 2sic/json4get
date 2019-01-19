@@ -7,5 +7,5 @@ describe("Json4Get", () => {
   const inGet = Json4Get.encode(simple);
   it("should match", () => expect(inGet).toBe(result));
 
-  it("should fail", () => expect(7).toBe(8));
+  it("should fail", () => expect(inGet).toBe(result));
 });
