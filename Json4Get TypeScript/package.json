@@ -4,8 +4,8 @@
   "description": "JSON for HTTP GET adapter",
   "main": "index.js",
   "scripts": {
-    "xtest": "jasmine",
-    "test": "jasmine-ts --config=spec/support/jasmine.json",
+    "xtest": "tsc && jasmine",
+    "test": "jasmine-ts --config=jasmine.json",
     "testWithCoverage": "nyc -r lcov -e .ts -x \"*.test.ts\" jasmine-ts --config=jasmine.json && nyc report"
   },
   "repository": {

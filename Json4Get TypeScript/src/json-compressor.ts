@@ -17,19 +17,19 @@ export class JsonCompressor {
       };
   });
 
-  public Compress(json: string): string
-  {
-    for(let i = 0; i < this.Compressors.length; i++) {
-      let c = this.Compressors[i];
+  public compress(json: string): string {
+    for (const c of this.Compressors) {
       json = json.replace(c.rex, c.replace);
     }
     return json;
   }
 
-
-
-
-
+  public decompress(compressed: string): string {
+    for (const c of this.Decompressors) {
+      compressed = compressed.replace(c.rex, c.replace);
+    }
+    return compressed;
+  }
 
 }
 

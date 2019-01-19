@@ -1,5 +1,5 @@
-export class MyApi {
-  public getName(): string {
-      return "";
-  }
-}
+// export class MyApi {
+//   public getName(): string {
+//       return "";
+//   }
+// }
