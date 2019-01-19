@@ -48,4 +48,4 @@ This is simple and straight-forward, and all the substituted characters can neve
 
 ## Implemented Programming Languages
 
-As of 2019-01 we are implementing in in .net 2.0, .net core and JavaScript. 
+As of 2019-01 we are implementing in in .net 2.0, .net core and JavaScript.

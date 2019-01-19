@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.2</TargetFramework>
+    <AssemblyName>ToSic.Json4Get</AssemblyName>
+    <RootNamespace>ToSic.Json4Get</RootNamespace>
+  </PropertyGroup>
+
+</Project>
