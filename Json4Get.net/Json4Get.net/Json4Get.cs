@@ -35,22 +35,20 @@ namespace ToSic.Json4Get
         public static string Decode(string original) => new Decoder(original).Decode();
     }
 
-    internal class Encoder
+    internal class Encoder: EncDecBase
     {
-        internal string Original;
-        internal Encoder(string original) => Original = original;
+        internal Encoder(string original) : base(original) { }
 
-        internal StringBuilder Builder = new StringBuilder();
         internal StringBuilder ValueBuilder = new StringBuilder();
         internal bool OutsideOfQuotes = true;
         internal char PrevCharacter = default(char);
-        internal int openCloseCount = 0; // keep track of open/close cases, as in the end we should be back at zero
+        internal int OpenCloseCount; // keep track of open/close cases, as in the end we should be back at zero
 
         public string Encode()
         {
             // First, do basic validity checking
             if (string.IsNullOrWhiteSpace(Original)) return Original;
-            Helpers.VerifyStartingCharIsValid(ref Original, Characters.JsonStartMarkers);
+            VerifyStartingCharIsValid(Characters.JsonStartMarkers);
             Original = JsonCompressor.Compress(Original);
 
             // not process each character
@@ -67,32 +65,33 @@ namespace ToSic.Json4Get
 
 
             // final error-checking
-            if (openCloseCount != 0)
-                throw new Exception($"Cannot convert json4get, total opening / closing brackets and quotes don't match, got {openCloseCount}");
+            if (OpenCloseCount != 0)
+                throw new Exception($"Cannot convert json4get, total opening / closing brackets and quotes don't match, got {OpenCloseCount}");
 
             return Builder.ToString();
         }
 
         private void ProcessInsideValue(char currentChar)
         {
-            if (currentChar == Characters.QuoteEncoded || currentChar == Characters.SpaceReplacement)
-                ValueBuilder.Append(Characters.EscapePrefix).Append(currentChar);
-            else if (currentChar == Characters.Space)
-                ValueBuilder.Append(Characters.SpaceReplacement);
-            // Case leaving the quoted value
-            else if (currentChar == Characters.QuoteOriginal && PrevCharacter != Characters.EscapePrefix)
+            //if (currentChar == Characters.QuoteEncoded || currentChar == Characters.SpaceReplacement)
+            //    ValueBuilder.Append(Characters.EscapePrefix).Append(currentChar);
+            //else if (currentChar == Characters.Space)
+            //    ValueBuilder.Append(Characters.SpaceReplacement);
+            //// Case leaving the quoted value
+            //else 
+            if (currentChar == Characters.QuoteOriginal && PrevCharacter != Characters.EscapePrefix)
             {
                 var value = ValueBuilder.ToString();
                 var needsQuotes = true; // NeedsQuotes(value);
 
                 if (needsQuotes)
                     Builder.Append(Characters.QuoteEncoded);
-                Builder.Append(value);
+                Builder.Append(EncodeValue(value));
                 if (needsQuotes)
                     Builder.Append(Characters.QuoteEncoded);
 
                 // Reset value state
-                openCloseCount--;
+                OpenCloseCount--;
                 ValueBuilder.Clear();
                 OutsideOfQuotes = true;
             }
@@ -100,12 +99,13 @@ namespace ToSic.Json4Get
                 ValueBuilder.Append(currentChar);
         }
 
+
         private void ProcessOutsideOfQuote(char currentChar)
         {
             var index = Characters.Specials.IndexOf(currentChar);
             if (index != -1)
             {
-                openCloseCount += Characters.OpenCounters[index];
+                OpenCloseCount += Characters.OpenCounters[index];
                 if (currentChar == Characters.QuoteOriginal)
                     OutsideOfQuotes = false;
                 else
@@ -127,23 +127,20 @@ namespace ToSic.Json4Get
     }
 
 
-    internal class Decoder
+    internal class Decoder: EncDecBase
     {
-        internal string Original;
-        internal Decoder(string original) => Original = original;
+        internal Decoder(string original) : base(original) { }
 
-        internal readonly StringBuilder Builder = new StringBuilder();
         internal readonly StringBuilder Fragment = new StringBuilder();
 
         internal bool OutsideOfQuotes = true;
         internal char PrevChar = default(char);
         internal string Decode()
         {
-            #region First, do basic validity checking
+            // First, do basic validity checking
             if (string.IsNullOrWhiteSpace(Original)) return Original;
             Original = Original.Trim();
-            Helpers.VerifyStartingCharIsValid(ref Original, Characters.Json4GetStartMarkers);
-            #endregion
+            VerifyStartingCharIsValid(Characters.Json4GetStartMarkers);
 
             foreach (var currentChar in Original)
             {
@@ -154,6 +151,7 @@ namespace ToSic.Json4Get
 
                 PrevChar = currentChar; // remember the char for next checks...
             }
+            FlushFragment();
             var result = Builder.ToString();
             return JsonCompressor.Decompress(result);
         }
@@ -168,19 +166,20 @@ namespace ToSic.Json4Get
         {
             switch (currentChar)
             {
-                case Characters.SpaceReplacement:
-                    if (PrevChar == Characters.EscapePrefix)
-                        Fragment.ReplaceLast(currentChar);
-                    else
-                        Fragment.Append(Characters.Space);
-                    break;
                 case Characters.QuoteEncoded:
                     if (PrevChar == Characters.EscapePrefix)
                         Fragment.ReplaceLast(currentChar);
                     else
                     {
-                        Fragment.Append(Characters.QuoteOriginal);
-                        FlushFragment();
+                        // WIP here
+                        // Working on later auto-detecting if we add quotes around the decrypted values
+                        var val = DecodeValue(Fragment.ToString());
+                        Builder.Append($"{Characters.QuoteOriginal}{val}{Characters.QuoteOriginal}");
+                        Fragment.Clear();
+
+                        //Fragment.Insert(0, Characters.QuoteOriginal);
+                        //Fragment.Append(Characters.QuoteOriginal);
+                        //FlushFragment();
                         OutsideOfQuotes = true;
                     }
                     break;
@@ -188,6 +187,48 @@ namespace ToSic.Json4Get
                     Fragment.Append(currentChar);
                     break;
             }
+        }
+
+
+        private string DecodeFragment(string fragment, bool forceQuotes)
+        {
+            // empty value
+            if (string.IsNullOrEmpty(fragment))
+                return !forceQuotes ? fragment : new string(Characters.QuoteOriginal, 2);
+
+            // one of the n/t/f values = null, true, false
+            if (fragment.Length == 1 && JsonCompressor.StructureAbbreviations.Trim().Contains(fragment[0]))
+                return !forceQuotes ? fragment : $"{Characters.QuoteOriginal}{fragment}{Characters.QuoteEncoded}";
+
+            var nextCharIsEscaped = false;
+            var fragBuilder = new StringBuilder();
+            foreach (var currentChar in fragment)
+            {
+                if (nextCharIsEscaped)
+                {
+                    fragBuilder.Append(currentChar);
+                    nextCharIsEscaped = false;
+                    continue;
+                }
+
+                switch (currentChar)
+                {
+                    case Characters.EscapePrefix:
+                        nextCharIsEscaped = true;
+                        break;
+                    case Characters.SpaceReplacement:
+                        fragBuilder.Append(Characters.Space);
+                        break;
+                    default:
+                        fragBuilder.Append(currentChar);
+                        break;
+                }
+            }
+
+            // return result
+            return forceQuotes 
+                ? $"{Characters.QuoteOriginal}{fragBuilder}{Characters.QuoteOriginal}" 
+                : $"{fragBuilder}";
         }
 
         /// <summary>
@@ -198,12 +239,16 @@ namespace ToSic.Json4Get
         {
             var index = Characters.Replacements.IndexOf(currentChar);
             if (index == -1)
-                Builder.Append(currentChar);
+                Fragment.Append(currentChar);
             else
             {
-                Builder.Append(Characters.Specials[index]);
-                if (currentChar == Characters.QuoteEncoded)
+                if (currentChar != Characters.QuoteEncoded)
+                    Fragment.Append(Characters.Specials[index]);
+                else
+                {
+                    FlushFragment();
                     OutsideOfQuotes = false;
+                }
             }
         }
     }
@@ -218,20 +263,45 @@ namespace ToSic.Json4Get
         }
         #endregion
 
-        internal static void VerifyStartingCharIsValid(ref string original, string allowedFirstChars)
+    }
+
+    internal class EncDecBase
+    {
+        protected string Original;
+        protected EncDecBase(string original) => Original = original;
+
+        protected StringBuilder Builder = new StringBuilder();
+
+        protected void VerifyStartingCharIsValid(string allowedFirstChars)
         {
-            foreach (var character in original)
+            foreach (var character in Original)
             {
                 // found allowed / expected character, ok
                 if (allowedFirstChars.IndexOf(character) >= 0) return;
-
                 // whitespace, keep testing
-                if (Char.IsWhiteSpace(character)) continue;
-
+                if (char.IsWhiteSpace(character)) continue;
                 // none of the above, throw
                 throw new Exception("Cannot encode json4get - first character does not seem to be a json starter");
             }
         }
+
+
+        protected Tuple<string, string>[] ValueEncodes = {
+            new Tuple<string, string>($"{Characters.QuoteEncoded}",
+                $"{Characters.EscapePrefix}{Characters.QuoteEncoded}"),
+            new Tuple<string, string>($"{Characters.SpaceReplacement}",
+                $"{Characters.EscapePrefix}{Characters.SpaceReplacement}"),
+            new Tuple<string, string>(Characters.Space.ToString(), 
+                Characters.SpaceReplacement.ToString()),
+            new Tuple<string, string>($"{Characters.EscapePrefix}{Characters.QuoteOriginal}",
+                $"{Characters.QuoteOriginal}"),
+        };
+
+        protected string EncodeValue(string value) 
+            => ValueEncodes.Aggregate(value, (current, t) => current.Replace(t.Item1, t.Item2));
+
+        protected string DecodeValue(string value) 
+            => ValueEncodes.Reverse().Aggregate(value, (current, t) => current.Replace(t.Item2, t.Item1));
     }
 
 }

@@ -31,6 +31,8 @@
         /// </summary>
         public const string Replacements = "!*()LJ'";
 
+        public static bool?[] StartsValue = {true, true, null, false, null, false, null};
+
         /// <summary>
         /// This counts the amount of boxing/unboxing based on the character which was scanned
         /// Basic characters like : or , don't box, while ([ open and ]) close
@@ -47,8 +49,8 @@
         /// see also https://www.w3schools.com/js/js_json_datatypes.asp
         /// So the first character would be any of these incl. n, t, f
         /// </summary>
-        public const string JsonStartMarkers = "{[\"0123456789ntf";
+        public const string JsonStartMarkers = "{[\"-0123456789ntf";
 
-        public const string Json4GetStartMarkers = "(['0123456789ntf";
+        public const string Json4GetStartMarkers = "(['-0123456789ntf";
     }
 }

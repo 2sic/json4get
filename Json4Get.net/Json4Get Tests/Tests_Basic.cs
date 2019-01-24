@@ -11,14 +11,19 @@ namespace Json4Get_Tests
         public static Dictionary<string, OneValue> SimpleValues = new Dictionary<string, OneValue>
         {
             //{"('Val'!'...')", new OneValue("...") },
+
             {"('Val'!'simple')", new OneValue("simple")},
             {"('Val'!8)", new OneValue(8)},
             {"('Val'!'single_quote_\\'')", new OneValue("single quote '")},
             {"('Val'!'multi_\\'single_quote\\'')", new OneValue("multi 'single quote'")},
             {"('Val'!'multi_single_\\'\\'')", new OneValue("multi single ''") },
-            {"('Val'!'double_\\\"')", new OneValue("double \"") },
+            {"('Val'!'double_\"')", new OneValue("double \"") },
+            {"('Val'!'slash-quote\\\\\"')", new OneValue("slash-quote\\\"") },
+            //{"('Val'!'slash-space\\_')", new OneValue("slash-space\\ ") }, // <-- todo: problem! looks like a \_ when encoded
+            //{"('Val'!'slash-underline\\_')", new OneValue("slash-underline_") },
+            //{"('Val'!'slash-underline\\_')", new OneValue("slash-underline\\_") },
             {"('Val'!'text_with_{curly}_and_(normal)_brackets')", new OneValue("text with {curly} and (normal) brackets") },
-            {"('Val'!'mixed_\\\"_\\'_quotes_\\\"_\\'')", new OneValue("mixed \" ' quotes \" '") },
+            {"('Val'!'mixed_\"_\\'_quotes_\"_\\'')", new OneValue("mixed \" ' quotes \" '") },
             {"('Val'!'containing_square_[_brackets_]')", new OneValue("containing square [ brackets ]") },
             {"('Val'!L1*2*3*-4*-22J)", new OneValue(new [] {1,2,3,-4,-22}) },
             {"('Val'!n)", new OneValue(null) },
@@ -29,7 +34,7 @@ namespace Json4Get_Tests
         public static Dictionary<string, string> Compactify = new Dictionary<string, string>
         {
             {"('Val'!'simple')", "{\"Val\" : \"simple\"}"},
-            {"('Val'!'simple-containing-quote\\\"')", "{\"Val\" : \"simple-containing-quote\\\"\"}"},
+            {"('Val'!'simple-containing-quote\"')", "{\"Val\" : \"simple-containing-quote\\\"\"}"},
             {"('Val'!'simple2')", "   {\"Val\" : \"simple2\"}"},
             {"('Val'!'simple3')", "   {  \"Val\" : \"simple3\"}"},
             {"('Val'!'simple4')", "   {  \"Val\" \n\n: \"simple4\"}"},
