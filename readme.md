@@ -35,7 +35,7 @@ JSON puts just about everything between `"` quotes to mark values, except for `{
 * `{` and `}` become `(` and `)` for easy readibility (looks similar)
 * `"` becomes `'` for easy readibility (looks similar)
 * `:` becomes `!` for easy readibily (looks similar)
-* `,` becomes `*` as it's a clear separation character (`-` is not an option, as it's used for values)
+* `,` becomes `*` as it's a clear separation character (`-` is not an option, as it's used for negative number values)
 * `[` and `]` become `L` and `J` as it looks a bit similar
 
 This is simple and straight-forward, and all the substituted characters can never occur in a JSON outside of a value node.
