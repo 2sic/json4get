@@ -38,6 +38,8 @@ JSON puts just about everything between `"` quotes to mark values, except for `{
 * `,` becomes `*` as it's a clear separation character (`-` is not an option, as it's used for negative number values)
 * `[` and `]` become `L` and `J` as it looks a bit similar
 
+WIP Note: _As keys usually don't have special characters, we're looking into the possibility to also leave away quotes for certain "safely detectable" strings_
+
 This is simple and straight-forward, and all the substituted characters can never occur in a JSON outside of a value node.
 
 ### Substitutions _Inside_ Values
