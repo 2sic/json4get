@@ -16,12 +16,13 @@ namespace ToSic.Json4Get
         /// Convert a JSON into a nicer GET capable format
         /// </summary>
         /// <param name="original"></param>
+        /// <param name="enableQuoteShrinking"></param>
         /// <remarks>
         /// in will test for various bad inputs, but in general you should be sure to only throw real
         /// JSON at it.
         /// </remarks>
         /// <returns></returns>
-        public static string Encode(string original) => new Encoder(original).Encode();
+        public static string Encode(string original, bool enableQuoteShrinking = false) => new Encoder(original, enableQuoteShrinking).Encode();
 
         /// <summary>
         /// Decode Json4Get to JSON
@@ -37,7 +38,12 @@ namespace ToSic.Json4Get
 
     internal class Encoder: EncDecBase
     {
-        internal Encoder(string original) : base(original) { }
+        internal Encoder(string original, bool enableQuoteShrinking = false) : base(original)
+        {
+            EnableQuoteShrinking = enableQuoteShrinking;
+        }
+        internal readonly bool EnableQuoteShrinking;
+
 
         internal StringBuilder ValueBuilder = new StringBuilder();
         internal bool OutsideOfQuotes = true;
@@ -73,21 +79,15 @@ namespace ToSic.Json4Get
 
         private void ProcessInsideValue(char currentChar)
         {
-            //if (currentChar == Characters.QuoteEncoded || currentChar == Characters.SpaceReplacement)
-            //    ValueBuilder.Append(Characters.EscapePrefix).Append(currentChar);
-            //else if (currentChar == Characters.Space)
-            //    ValueBuilder.Append(Characters.SpaceReplacement);
-            //// Case leaving the quoted value
-            //else 
             if (currentChar == Characters.QuoteOriginal && PrevCharacter != Characters.EscapePrefix)
             {
                 var value = ValueBuilder.ToString();
-                var needsQuotes = true; // NeedsQuotes(value);
+                var skipQuotes = EnableQuoteShrinking && !NeedsQuotes(value);
 
-                if (needsQuotes)
+                if (!skipQuotes)
                     Builder.Append(Characters.QuoteEncoded);
                 Builder.Append(EncodeValue(value));
-                if (needsQuotes)
+                if (!skipQuotes)
                     Builder.Append(Characters.QuoteEncoded);
 
                 // Reset value state
@@ -176,10 +176,6 @@ namespace ToSic.Json4Get
                         var val = DecodeValue(Fragment.ToString());
                         Builder.Append($"{Characters.QuoteOriginal}{val}{Characters.QuoteOriginal}");
                         Fragment.Clear();
-
-                        //Fragment.Insert(0, Characters.QuoteOriginal);
-                        //Fragment.Append(Characters.QuoteOriginal);
-                        //FlushFragment();
                         OutsideOfQuotes = true;
                     }
                     break;
